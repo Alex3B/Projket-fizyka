@@ -1,0 +1,100 @@
+import math
+
+# Stałe fizyczne
+R_H = 13.6  # Stała Rydberga dla wodoru [eV]
+h = 4.135667696e-15  # Stała Plancka [eV·s]
+c = 2.998e8  # Prędkość światła [m/s]
+eV_to_J = 1.60218e-19  # Przelicznik eV na J
+
+def get_float_input(prompt, min_val=None, max_val=None):
+    while True:
+        try:
+            val = float(input(prompt))
+            if min_val is not None and val < min_val:
+                print(f"Wartość musi być większa lub równa {min_val}.")
+            elif max_val is not None and val > max_val:
+                print(f"Wartość musi być mniejsza lub równa {max_val}.")
+            else:
+                return round(val, 2)
+        except ValueError:
+            print("Niepoprawny format liczby. Spróbuj ponownie.")
+
+def get_int_input(prompt, min_val=1):
+    while True:
+        try:
+            val = int(input(prompt))
+            if val < min_val:
+                print(f"Liczba musi być większa lub równa {min_val}.")
+            else:
+                return val
+        except ValueError:
+            print("Niepoprawny format liczby całkowitej. Spróbuj ponownie.")
+
+def energy_level(n):
+    return -R_H / (n ** 2)
+
+def check_absorption(energy):
+    found = False
+    for n1 in range(1, 11):
+        for n2 in range(n1 + 1, 12):
+            delta_E = round(energy_level(n2) - energy_level(n1), 2)
+            if abs(energy - delta_E) < 0.05:
+                print(f"✔ Atom wodoru może pochłonąć foton o energii {energy} eV (przejście {n1} → {n2}).")
+                found = True
+    if not found:
+        print(f"✘ Atom wodoru NIE pochłonie fotonu o energii {energy} eV.")
+
+def check_emission(wavelength_nm):
+    wavelength_m = wavelength_nm * 1e-9
+    energy = (h * c) / wavelength_m  # [eV]
+    energy = round(energy, 2)
+    found = False
+
+    for n2 in range(1, 10):
+        for n1 in range(n2 + 1, 11):
+            delta_E = round(energy_level(n2) - energy_level(n1), 2)
+            if abs(energy - abs(delta_E)) < 0.05:
+                print(f"✔ Atom wodoru może wyemitować falę o długości {wavelength_nm} nm (przejście {n1} → {n2}).")
+                found = True
+    if not found:
+        print(f"✘ Atom wodoru NIE wyemituje fali o długości {wavelength_nm} nm.")
+
+def calculate_wavelength_from_transition():
+    print("\nObliczanie długości fali na podstawie przejścia między orbitami:")
+    n1 = get_int_input("Podaj numer orbity początkowej (n1): ")
+    n2 = get_int_input("Podaj numer orbity końcowej (n2): ")
+
+    if n1 == n2:
+        print("Brak przejścia – orbity są takie same.")
+        return
+
+    delta_E = energy_level(n2) - energy_level(n1)  # eV
+    energy = abs(delta_E)
+
+    wavelength_m = (h * c) / (energy * eV_to_J)
+    wavelength_nm = round(wavelength_m * 1e9, 2)
+
+    if n2 > n1:
+        print(f"\n✔ ABSORPCJA: przejście {n1} → {n2}")
+    else:
+        print(f"\n✔ EMISJA: przejście {n1} → {n2}")
+
+    print(f"Długość fali: {wavelength_nm} nm")
+
+def main():
+    print("=== Analiza zjawisk fotonowych w atomie wodoru ===")
+
+    # 1. Sprawdzenie pochłaniania fotonu
+    energy = get_float_input("\nPodaj energię fotonu w eV (np. 1.89): ", 0.01)
+    check_absorption(energy)
+
+    # 2. Sprawdzenie emisji fotonu
+    wavelength = get_float_input("\nPodaj długość fali w nm (np. 656.3): ", 1)
+    check_emission(wavelength)
+
+    # 3. Obliczenie długości fali przy przejściu między orbitami
+    calculate_wavelength_from_transition()
+
+if __name__ == "__main__":
+    main()
+
